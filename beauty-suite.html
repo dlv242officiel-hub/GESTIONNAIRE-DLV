@@ -1,0 +1,1019 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="Beauty Suite"/>
+<meta name="theme-color" content="#0c0a14"/>
+<meta name="description" content="Gestion complète de votre institut de beauté"/>
+<link rel="manifest" href="manifest.json"/>
+<link rel="apple-touch-icon" href="icon-192.png"/>
+<title>Beauty Suite</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+/* ── RESET & BASE ─────────────────────────────────────────────── */
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#0c0a14;--card:#13101f;--surface:#1a1628;--border:#1e1a2e;
+  --text:#f0eaf8;--muted:#8b7faa;--accent:#d4a5ff;--accent2:#f9a8d4;
+  --green:#86efac;--yellow:#fcd34d;--red:#fca5a5;--blue:#93c5fd;
+  --nav-h:64px;--safe-b:env(safe-area-inset-bottom,0px);
+  --radius:14px;--radius-sm:9px;
+}
+html,body{height:100%;overflow:hidden;background:var(--bg);font-family:'Outfit',sans-serif;color:var(--text)}
+::-webkit-scrollbar{width:3px;height:3px}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+
+/* ── LAYOUT ───────────────────────────────────────────────────── */
+#app{display:flex;flex-direction:column;height:100%;height:100dvh}
+#topbar{
+  display:none;flex-shrink:0;
+  background:var(--card);border-bottom:1px solid var(--border);
+  padding:0 24px;height:60px;align-items:center;justify-content:space-between;
+  position:sticky;top:0;z-index:100;
+}
+#sidebar{
+  display:none;width:220px;flex-shrink:0;
+  background:var(--card);border-right:1px solid var(--border);
+  flex-direction:column;overflow:hidden;
+}
+#content-wrap{display:flex;flex:1;overflow:hidden}
+#main{flex:1;overflow-y:auto;padding:20px 16px;padding-bottom:calc(var(--nav-h) + var(--safe-b) + 16px)}
+#bottom-nav{
+  display:flex;flex-shrink:0;
+  background:var(--card);border-top:1px solid var(--border);
+  height:var(--nav-h);padding-bottom:var(--safe-b);
+  position:sticky;bottom:0;z-index:100;overflow-x:auto;
+}
+.bnav-item{
+  flex:1;min-width:56px;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:3px;border:none;background:none;cursor:pointer;
+  color:var(--muted);font-family:'Outfit',sans-serif;font-size:10px;
+  padding:8px 4px;transition:color .15s;text-align:center;
+}
+.bnav-item.active{color:var(--accent)}
+.bnav-item .icon{font-size:18px;line-height:1}
+.bnav-item span:last-child{font-size:9px;white-space:nowrap}
+.desktop-sidebar-nav{flex:1;overflow-y:auto;padding:8px 10px}
+.snav-btn{
+  display:flex;align-items:center;gap:10px;width:100%;
+  background:none;border:1px solid transparent;border-radius:10px;
+  padding:10px 12px;cursor:pointer;color:var(--muted);
+  font-size:13px;font-family:'Outfit',sans-serif;text-align:left;
+  margin-bottom:3px;transition:all .15s;
+}
+.snav-btn.active{background:rgba(212,165,255,.12);border-color:rgba(212,165,255,.3);color:var(--accent)}
+.sidebar-logo{padding:24px 18px 14px;border-bottom:1px solid var(--border);flex-shrink:0}
+.sidebar-user{padding:12px 14px;border-top:1px solid var(--border);flex-shrink:0}
+
+/* ── DESKTOP BREAKPOINT ────────────────────────────────────────── */
+@media(min-width:768px){
+  #topbar{display:flex}
+  #sidebar{display:flex}
+  #bottom-nav{display:none}
+  #main{padding:28px 32px;padding-bottom:28px}
+}
+
+/* ── SCREENS ──────────────────────────────────────────────────── */
+.screen{display:none;animation:fadeIn .2s ease}
+.screen.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+/* ── PAGE HEADER ──────────────────────────────────────────────── */
+.ph{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;gap:12px;flex-wrap:wrap}
+.ph h2{font-family:'Cormorant Garamond',serif;font-size:clamp(22px,5vw,30px);color:var(--text);line-height:1}
+.ph p{color:var(--muted);font-size:13px;margin-top:2px}
+
+/* ── CARDS ───────────────────────────────────────────────────── */
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius)}
+.stat-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:20px}
+@media(min-width:600px){.stat-grid{grid-template-columns:repeat(4,1fr)}}
+.stat-card{
+  background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
+  padding:16px;border-left:4px solid var(--accent);
+}
+.stat-card .label{color:var(--muted);font-size:10px;letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px}
+.stat-card .value{color:var(--text);font-size:clamp(20px,4vw,26px);font-weight:700;font-family:'Cormorant Garamond',serif;line-height:1}
+.stat-card .sub{color:var(--accent);font-size:11px;margin-top:4px}
+
+/* ── BADGE ───────────────────────────────────────────────────── */
+.badge{display:inline-block;padding:2px 9px;border-radius:20px;font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;white-space:nowrap}
+
+/* ── SEARCH & FILTERS ─────────────────────────────────────────── */
+.search-bar{position:relative;flex:1;min-width:180px}
+.search-bar input{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px 10px 34px;color:var(--text);font-size:14px;font-family:'Outfit',sans-serif;outline:none}
+.search-bar::before{content:'⌕';position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:16px;pointer-events:none}
+.filter-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;align-items:center}
+.filter-btn{background:none;border:1px solid var(--border);border-radius:20px;padding:5px 13px;color:var(--muted);font-size:12px;font-family:'Outfit',sans-serif;cursor:pointer;transition:all .15s;white-space:nowrap}
+.filter-btn.on{border-color:var(--accent);color:var(--accent)}
+
+/* ── LISTS ───────────────────────────────────────────────────── */
+.list-item{
+  background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
+  padding:14px 16px;display:flex;align-items:center;gap:12px;margin-bottom:10px;
+}
+.avatar{
+  width:40px;height:40px;border-radius:50%;display:flex;align-items:center;
+  justify-content:center;font-size:14px;font-weight:700;flex-shrink:0;
+}
+.item-actions{display:flex;gap:6px;flex-shrink:0}
+.ghost-btn{background:none;border:1px solid var(--border);border-radius:7px;padding:5px 11px;color:var(--muted);font-size:12px;font-family:'Outfit',sans-serif;cursor:pointer}
+.danger-btn{color:var(--red)}
+
+/* ── TABLE ───────────────────────────────────────────────────── */
+.table-wrap{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:600px}
+th{background:var(--surface);color:var(--muted);font-size:10px;letter-spacing:.07em;text-transform:uppercase;padding:11px 14px;text-align:left;font-weight:500}
+td{padding:11px 14px;border-bottom:1px solid var(--border);font-size:13px}
+tr:last-child td{border-bottom:none}
+
+/* ── MODALS ───────────────────────────────────────────────────── */
+.overlay{
+  display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:500;
+  align-items:flex-end;justify-content:center;
+}
+.overlay.open{display:flex}
+@media(min-width:600px){.overlay{align-items:center}}
+.modal{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:20px 20px 0 0;width:100%;max-height:92dvh;overflow-y:auto;
+  padding:24px 20px;padding-bottom:calc(24px + var(--safe-b));
+  animation:slideUp .25s ease;
+}
+@media(min-width:600px){
+  .modal{border-radius:20px;width:500px;max-width:95vw;padding:28px;max-height:88vh}
+}
+@keyframes slideUp{from{transform:translateY(40px);opacity:0}to{transform:none;opacity:1}}
+.modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
+.modal-header h3{font-family:'Cormorant Garamond',serif;font-size:20px;color:var(--text)}
+.modal-close{background:none;border:none;color:var(--muted);font-size:24px;cursor:pointer;line-height:1;padding:0 4px}
+.drag-handle{width:40px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 18px;display:block}
+@media(min-width:600px){.drag-handle{display:none}}
+
+/* ── FORMS ───────────────────────────────────────────────────── */
+.field{margin-bottom:14px}
+.field label{display:block;color:var(--muted);font-size:11px;letter-spacing:.06em;text-transform:uppercase;margin-bottom:5px}
+.field input,.field select,.field textarea{
+  width:100%;background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius-sm);padding:10px 13px;color:var(--text);
+  font-size:14px;font-family:'Outfit',sans-serif;outline:none;
+}
+.field textarea{resize:vertical;min-height:60px}
+.field select option{background:var(--surface)}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.btn-primary{
+  width:100%;padding:13px;border:none;border-radius:10px;
+  font-size:14px;font-weight:600;font-family:'Outfit',sans-serif;cursor:pointer;margin-top:4px;
+}
+
+/* ── PRODUCT GRID ─────────────────────────────────────────────── */
+.prod-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px}
+@media(min-width:600px){.prod-grid{grid-template-columns:repeat(auto-fill,minmax(240px,1fr))}}
+.prod-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;display:flex;flex-direction:column;gap:8px}
+
+/* ── SERVICE GRID ─────────────────────────────────────────────── */
+.svc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px}
+@media(min-width:600px){.svc-grid{grid-template-columns:repeat(auto-fill,minmax(260px,1fr))}}
+.svc-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:18px;display:flex;flex-direction:column;gap:10px}
+
+/* ── CALENDAR ─────────────────────────────────────────────────── */
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:6px}
+.cal-day-name{text-align:center;color:var(--muted);font-size:10px;letter-spacing:.07em;text-transform:uppercase;padding:4px 0}
+.cal-cell{
+  border-radius:8px;padding:6px 3px;text-align:center;cursor:pointer;
+  border:1px solid transparent;background:transparent;
+  display:flex;flex-direction:column;align-items:center;gap:2px;min-height:48px;
+  transition:all .15s;
+}
+.cal-cell:hover{background:var(--surface)}
+.cal-cell.today{border-color:var(--accent2);background:rgba(249,168,212,.07)}
+.cal-cell.selected{border-color:var(--accent);background:rgba(212,165,255,.12)}
+.cal-cell .d{font-size:13px;color:var(--text);line-height:1.2}
+.cal-cell.today .d{color:var(--accent2);font-weight:700}
+.cal-cell.selected .d{color:var(--accent);font-weight:700}
+.cal-dot{height:4px;width:22px;border-radius:2px;opacity:.8}
+.rdv-panel{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-top:14px;max-height:280px;overflow-y:auto}
+.rdv-mini{background:var(--surface);border-radius:10px;padding:12px;margin-bottom:10px}
+
+/* ── EMPTY STATE ─────────────────────────────────────────────── */
+.empty{text-align:center;padding:40px 0;color:var(--muted)}
+.empty .ei{font-size:36px;margin-bottom:10px}
+
+/* ── ALERT BANNER ─────────────────────────────────────────────── */
+.alert-banner{background:rgba(252,165,165,.08);border:1px solid rgba(252,165,165,.3);border-radius:var(--radius);padding:14px 16px;margin-bottom:18px}
+
+/* ── PWA INSTALL ─────────────────────────────────────────────── */
+#install-bar{
+  display:none;position:fixed;bottom:calc(var(--nav-h) + var(--safe-b) + 8px);left:12px;right:12px;
+  background:var(--card);border:1px solid var(--accent);border-radius:var(--radius);
+  padding:12px 16px;z-index:200;align-items:center;gap:12px;
+}
+@media(min-width:768px){#install-bar{bottom:16px;left:auto;right:20px;width:320px}}
+#install-bar.show{display:flex}
+#install-bar p{flex:1;font-size:13px;color:var(--text)}
+#install-bar .ib-btn{background:var(--accent);color:#0c0a14;border:none;border-radius:8px;padding:7px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:'Outfit',sans-serif;white-space:nowrap}
+#install-bar .ib-close{background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer;padding:0 2px;line-height:1}
+
+/* ── LOGIN ───────────────────────────────────────────────────── */
+#login-screen{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  min-height:100dvh;padding:24px;background:var(--bg);
+}
+.login-card{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:36px 28px;width:100%;max-width:400px}
+.login-logo{text-align:center;margin-bottom:28px}
+.login-logo .glyph{color:var(--accent);font-size:36px;display:block;margin-bottom:8px}
+.login-logo h1{font-family:'Cormorant Garamond',serif;font-size:28px;color:var(--text)}
+.login-logo p{color:var(--muted);font-size:13px;margin-top:4px}
+.error-msg{color:var(--red);font-size:13px;text-align:center;margin-bottom:10px}
+.demo-box{margin-top:18px;background:var(--surface);border-radius:10px;padding:14px;font-size:12px;color:var(--muted)}
+.demo-box strong{color:var(--text);display:block;margin-bottom:6px}
+.demo-row{padding:3px 0;display:flex;gap:8px}
+.demo-row span{color:var(--accent)}
+
+/* ── TOPBAR ──────────────────────────────────────────────────── */
+.topbar-logo{font-family:'Cormorant Garamond',serif;font-size:20px;color:var(--text);display:flex;align-items:center;gap:8px}
+.topbar-logo .glyph{color:var(--accent)}
+.topbar-user{display:flex;align-items:center;gap:10px}
+.topbar-av{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700}
+.logout-btn{background:none;border:1px solid var(--border);border-radius:8px;padding:6px 12px;color:var(--muted);font-size:12px;cursor:pointer;font-family:'Outfit',sans-serif}
+
+/* ── MISC ────────────────────────────────────────────────────── */
+.two-col{display:grid;grid-template-columns:1fr;gap:14px}
+@media(min-width:700px){.two-col{grid-template-columns:1fr 1fr}}
+.page-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+input[type=date]::-webkit-calendar-picker-indicator,
+input[type=time]::-webkit-calendar-picker-indicator{filter:invert(.5)}
+.fab{position:fixed;bottom:calc(var(--nav-h)+var(--safe-b)+16px);right:16px;width:52px;height:52px;border-radius:50%;border:none;cursor:pointer;font-size:22px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(0,0,0,.5);z-index:90;transition:transform .15s}
+.fab:active{transform:scale(.92)}
+@media(min-width:768px){.fab{display:none}}
+</style>
+</head>
+<body>
+
+<!-- ── LOGIN ──────────────────────────────────────────────────── -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-logo">
+      <span class="glyph">✦</span>
+      <h1>Beauty Suite</h1>
+      <p>Connexion à votre espace</p>
+    </div>
+    <div class="field"><label>Adresse email</label><input id="l-email" type="email" placeholder="vous@beauty.fr" autocomplete="email"/></div>
+    <div class="field"><label>Mot de passe</label><input id="l-pwd" type="password" placeholder="••••••••" autocomplete="current-password"/></div>
+    <div id="l-err" class="error-msg" style="display:none"></div>
+    <button class="btn-primary" style="background:var(--accent);color:#0c0a14" onclick="doLogin()">Se connecter</button>
+    <div class="demo-box">
+      <strong>Comptes de démo :</strong>
+      <div class="demo-row">admin@beauty.fr / <span>admin123</span> (admin)</div>
+      <div class="demo-row">editor@beauty.fr / <span>edit123</span> (éditeur)</div>
+      <div class="demo-row">viewer@beauty.fr / <span>view123</span> (lecture)</div>
+    </div>
+  </div>
+</div>
+
+<!-- ── MAIN APP ────────────────────────────────────────────────── -->
+<div id="app" style="display:none">
+  <!-- Topbar (desktop) -->
+  <header id="topbar">
+    <div class="topbar-logo"><span class="glyph">✦</span> Beauty Suite</div>
+    <div class="topbar-user">
+      <div class="topbar-av" id="tb-av" style="background:rgba(212,165,255,.15);border:2px solid var(--accent);color:var(--accent)"></div>
+      <div><div style="font-size:13px;font-weight:500" id="tb-name"></div><div style="font-size:11px;color:var(--muted)" id="tb-role"></div></div>
+      <button class="logout-btn" onclick="doLogout()">Déconnexion</button>
+    </div>
+  </header>
+
+  <div id="content-wrap">
+    <!-- Sidebar (desktop) -->
+    <aside id="sidebar">
+      <div class="sidebar-logo">
+        <div style="color:var(--accent);font-size:26px;margin-bottom:4px">✦</div>
+        <div style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:700;color:var(--text)">Beauty Suite</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:2px">Institut de beauté</div>
+      </div>
+      <nav class="desktop-sidebar-nav" id="desk-nav"></nav>
+      <div class="sidebar-user" id="desk-user"></div>
+    </aside>
+
+    <!-- Main content -->
+    <main id="main">
+      <!-- DASHBOARD -->
+      <div id="s-dashboard" class="screen">
+        <div class="ph"><div><h2>Tableau de bord</h2><p>Bienvenue dans votre espace ✦</p></div></div>
+        <div class="stat-grid" id="dash-stats"></div>
+        <div id="dash-alert"></div>
+        <div class="two-col">
+          <div class="card" style="padding:18px"><div style="color:var(--muted);font-size:10px;letter-spacing:.08em;text-transform:uppercase;margin-bottom:14px">Dernières factures</div><div id="dash-factures"></div></div>
+          <div class="card" style="padding:18px"><div style="color:var(--muted);font-size:10px;letter-spacing:.08em;text-transform:uppercase;margin-bottom:14px">Prochains RDV</div><div id="dash-rdv"></div></div>
+        </div>
+      </div>
+
+      <!-- CLIENTS -->
+      <div id="s-clients" class="screen">
+        <div class="ph"><div><h2>Clients</h2><p id="clients-count"></p></div><div class="page-actions"><button class="ghost-btn" style="display:none" id="btn-add-client" onclick="openModal('client')">+ Nouveau</button></div></div>
+        <div class="filter-row"><div class="search-bar"><input id="q-clients" oninput="renderClients()" placeholder="Nom, email, ville…"/></div><button class="filter-btn on" onclick="filterStatus(this,'clients','all')" data-s="all">Tous</button><button class="filter-btn" onclick="filterStatus(this,'clients','actif')" data-s="actif">Actifs</button><button class="filter-btn" onclick="filterStatus(this,'clients','inactif')" data-s="inactif">Inactifs</button></div>
+        <div id="clients-list"></div>
+      </div>
+
+      <!-- SERVICES -->
+      <div id="s-services" class="screen">
+        <div class="ph"><div><h2>Services</h2><p id="svc-count"></p></div><div class="page-actions"><button class="ghost-btn" style="display:none" id="btn-add-svc" onclick="openModal('service')">+ Nouveau</button></div></div>
+        <div class="filter-row"><div class="search-bar"><input id="q-services" oninput="renderServices()" placeholder="Nom, description…"/></div><div id="svc-cat-filters"></div></div>
+        <div class="svc-grid" id="services-grid"></div>
+      </div>
+
+      <!-- PRODUITS -->
+      <div id="s-produits" class="screen">
+        <div class="ph"><div><h2>Produits</h2><p id="prod-count"></p></div><div class="page-actions"><button class="ghost-btn" style="display:none" id="btn-add-prod" onclick="openModal('produit')">+ Nouveau</button></div></div>
+        <div class="filter-row"><div class="search-bar"><input id="q-produits" oninput="renderProduits()" placeholder="Nom, marque…"/></div><div id="prod-cat-filters"></div></div>
+        <div class="table-wrap"><table><thead><tr><th>Produit</th><th>Marque</th><th>Catégorie</th><th>Prix</th><th>Stock</th><th></th></tr></thead><tbody id="produits-body"></tbody></table></div>
+      </div>
+
+      <!-- FACTURATION -->
+      <div id="s-facturation" class="screen">
+        <div class="ph"><div><h2>Facturation</h2><p id="fact-total"></p></div><div class="page-actions"><button class="ghost-btn" style="display:none" id="btn-add-fact" onclick="openModal('facture')">+ Nouvelle</button></div></div>
+        <div class="filter-row"><div class="search-bar"><input id="q-factures" oninput="renderFactures()" placeholder="N° facture, client…"/></div><button class="filter-btn on" onclick="filterFact(this,'all')" data-f="all">Toutes</button><button class="filter-btn" onclick="filterFact(this,'payée')" data-f="payée">Payées</button><button class="filter-btn" onclick="filterFact(this,'en attente')" data-f="en attente">En attente</button><button class="filter-btn" onclick="filterFact(this,'retard')" data-f="retard">Retard</button><div style="width:1px;background:var(--border);height:20px"></div><button class="filter-btn on" onclick="filterFactType(this,'tout')" data-ft="tout">Tout</button><button class="filter-btn" onclick="filterFactType(this,'service')" data-ft="service">Services</button><button class="filter-btn" onclick="filterFactType(this,'produit')" data-ft="produit">Produits</button></div>
+        <div class="table-wrap"><table><thead><tr><th>N° Facture</th><th>Client</th><th>Référence</th><th>Type</th><th>Montant</th><th>Statut</th><th></th></tr></thead><tbody id="factures-body"></tbody></table></div>
+      </div>
+
+      <!-- EMPLOYES -->
+      <div id="s-employes" class="screen">
+        <div class="ph"><div><h2>Employés</h2><p id="emp-count"></p></div><div class="page-actions"><button class="ghost-btn" style="display:none" id="btn-add-emp" onclick="openModal('employe')">+ Nouveau</button></div></div>
+        <div class="filter-row"><div class="search-bar"><input id="q-employes" oninput="renderEmployes()" placeholder="Nom, poste…"/></div></div>
+        <div id="employes-list"></div>
+      </div>
+
+      <!-- ACCÈS -->
+      <div id="s-acces" class="screen">
+        <div class="ph"><div><h2>Accès</h2><p>Matrice des permissions</p></div></div>
+        <div class="table-wrap" style="margin-bottom:18px"><table><thead id="acces-head"></thead><tbody id="acces-body"></tbody></table></div>
+        <div id="acces-roles"></div>
+      </div>
+
+      <!-- RDV -->
+      <div id="s-rendezvous" class="screen">
+        <div class="ph"><div><h2>Rendez-vous</h2><p id="rdv-count"></p></div><div class="page-actions"><button class="filter-btn" onclick="toggleRdvView()">📅 / ≡</button><button class="ghost-btn" style="display:none" id="btn-add-rdv" onclick="openModal('rdv')">+ Nouveau</button></div></div>
+        <div id="rdv-calendar-view">
+          <div class="card" style="padding:18px;margin-bottom:14px">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+              <button class="ghost-btn" onclick="calNav(-1)">‹</button>
+              <span id="cal-title" style="font-family:'Cormorant Garamond',serif;font-size:18px;color:var(--text)"></span>
+              <button class="ghost-btn" onclick="calNav(1)">›</button>
+            </div>
+            <div class="cal-grid" id="cal-daynames"></div>
+            <div class="cal-grid" id="cal-cells"></div>
+          </div>
+          <div class="rdv-panel" id="rdv-panel"></div>
+        </div>
+        <div id="rdv-list-view" style="display:none">
+          <div class="filter-row"><div class="search-bar"><input id="q-rdv" oninput="renderRdvList()" placeholder="Rechercher par client…"/></div></div>
+          <div id="rdv-list"></div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Bottom nav (mobile) -->
+  <nav id="bottom-nav" aria-label="Navigation principale"></nav>
+
+  <!-- FAB (mobile add button) -->
+  <button class="fab" id="fab" onclick="fabAction()" style="background:var(--accent);color:#0c0a14">+</button>
+</div>
+
+<!-- ── MODALS ──────────────────────────────────────────────────── -->
+<div class="overlay" id="modal-overlay" onclick="closeModal()">
+  <div class="modal" onclick="event.stopPropagation()">
+    <span class="drag-handle"></span>
+    <div class="modal-header">
+      <h3 id="modal-title">Formulaire</h3>
+      <button class="modal-close" onclick="closeModal()">×</button>
+    </div>
+    <div id="modal-body"></div>
+  </div>
+</div>
+
+<!-- ── PWA INSTALL BAR ─────────────────────────────────────────── -->
+<div id="install-bar">
+  <p>✦ Installer Beauty Suite sur votre appareil</p>
+  <button class="ib-btn" onclick="installPWA()">Installer</button>
+  <button class="ib-close" onclick="document.getElementById('install-bar').classList.remove('show')">×</button>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+// DATA & CONSTANTS
+// ═══════════════════════════════════════════════════════════════
+const USERS=[
+  {id:1,nom:"Sophie Martin",email:"admin@beauty.fr",password:"admin123",role:"admin",poste:"Directrice",avatar:"SM"},
+  {id:2,nom:"Lucas Bernard",email:"editor@beauty.fr",password:"edit123",role:"editor",poste:"Esthéticien",avatar:"LB"},
+  {id:3,nom:"Camille Durand",email:"viewer@beauty.fr",password:"view123",role:"viewer",poste:"Accueil",avatar:"CD"},
+];
+const ROLE_PERMS={
+  admin:["dashboard","clients","services","produits","facturation","employes","acces","rendezvous"],
+  editor:["dashboard","clients","services","produits","rendezvous"],
+  viewer:["dashboard","clients"],
+};
+const ROLE_COLOR={admin:"#d4a5ff",editor:"#86efac",viewer:"#93c5fd"};
+const STATUS_COLOR={actif:"#86efac",inactif:"#fca5a5","en congé":"#fcd34d",payée:"#86efac","en attente":"#fcd34d",retard:"#fca5a5",annulée:"#94a3b8",confirmé:"#86efac",pending:"#fcd34d",annulé:"#fca5a5"};
+const MONTHS=["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"];
+const DAYS_SHORT=["Lun","Mar","Mer","Jeu","Ven","Sam","Dim"];
+const SVC_CATS=["Visage","Épilation","Ongles","Corps","Maquillage","Autre"];
+const CAT_ICON={Visage:"✦",Épilation:"🪷",Ongles:"💅",Corps:"🫧",Maquillage:"💄",Autre:"◈"};
+const PROD_CATS=["Soin","Ongles","Corps","Maquillage","Parfum","Accessoire","Autre"];
+const NAV_ITEMS=[
+  {id:"dashboard",label:"Accueil",icon:"◈"},
+  {id:"clients",label:"Clients",icon:"◉"},
+  {id:"services",label:"Services",icon:"✦"},
+  {id:"produits",label:"Produits",icon:"🧴"},
+  {id:"facturation",label:"Factures",icon:"◎"},
+  {id:"employes",label:"Équipe",icon:"◉"},
+  {id:"acces",label:"Accès",icon:"◆"},
+  {id:"rendezvous",label:"RDV",icon:"◑"},
+];
+const SEED={
+  clients:[
+    {id:1,nom:"Isabelle Moreau",email:"isa@mail.fr",tel:"06 12 34 56 78",ville:"Paris",status:"actif",notes:"Allergie nickel"},
+    {id:2,nom:"Nathalie Blanc",email:"nat@mail.fr",tel:"06 23 45 67 89",ville:"Lyon",status:"actif",notes:""},
+    {id:3,nom:"Clara Petit",email:"clara@mail.fr",tel:"06 34 56 78 90",ville:"Bordeaux",status:"inactif",notes:""},
+  ],
+  services:[
+    {id:1,nom:"Soin visage hydratant",categorie:"Visage",prix:75,duree:"60 min",description:"Nettoyage + masque hydratant"},
+    {id:2,nom:"Épilation jambes",categorie:"Épilation",prix:45,duree:"45 min",description:"Cire chaude jambes complètes"},
+    {id:3,nom:"Manucure gel",categorie:"Ongles",prix:55,duree:"50 min",description:"Pose gel couleur, french ou nude"},
+    {id:4,nom:"Massage relaxant",categorie:"Corps",prix:90,duree:"75 min",description:"Massage suédois corps entier"},
+    {id:5,nom:"Maquillage événement",categorie:"Maquillage",prix:80,duree:"60 min",description:"Maquillage soirée ou mariage"},
+  ],
+  produits:[
+    {id:1,nom:"Sérum Vitamine C",marque:"La Roche-Posay",categorie:"Soin",prix:34.90,stock:28,seuil:5,description:"Éclat et anti-oxydant"},
+    {id:2,nom:"Crème hydra boost",marque:"Neutrogena",categorie:"Soin",prix:18.50,stock:3,seuil:5,description:"Hydratation 48h"},
+    {id:3,nom:"Vernis gel rose",marque:"OPI",categorie:"Ongles",prix:12.00,stock:15,seuil:3,description:"Tenue 3 semaines"},
+    {id:4,nom:"Huile corps amande",marque:"L'Occitane",categorie:"Corps",prix:28.00,stock:9,seuil:4,description:"Sèche et légère"},
+    {id:5,nom:"Fond de teint fluide",marque:"MAC",categorie:"Maquillage",prix:42.00,stock:0,seuil:2,description:"Couvrance modulable"},
+  ],
+  factures:[
+    {id:"F-2024-001",clientId:1,type:"service",refId:1,qte:1,montant:75,statut:"payée",date:"2024-11-15"},
+    {id:"F-2024-002",clientId:2,type:"produit",refId:1,qte:2,montant:69.80,statut:"en attente",date:"2024-12-01"},
+    {id:"F-2024-003",clientId:3,type:"service",refId:4,qte:1,montant:90,statut:"retard",date:"2024-10-20"},
+    {id:"F-2024-004",clientId:1,type:"produit",refId:4,qte:1,montant:28,statut:"payée",date:"2024-12-10"},
+  ],
+  employes:[
+    {id:1,nom:"Sophie Martin",poste:"Directrice",email:"s.martin@beauty.fr",role:"admin",status:"actif",tel:"06 00 00 00 01",specialites:"Gestion"},
+    {id:2,nom:"Lucas Bernard",poste:"Esthéticien",email:"l.bernard@beauty.fr",role:"editor",status:"actif",tel:"06 00 00 00 02",specialites:"Épilation, Massage"},
+    {id:3,nom:"Camille Durand",poste:"Esthéticienne",email:"c.durand@beauty.fr",role:"editor",status:"actif",tel:"06 00 00 00 03",specialites:"Visage, Maquillage"},
+    {id:4,nom:"Antoine Petit",poste:"Commercial",email:"a.petit@beauty.fr",role:"viewer",status:"en congé",tel:"06 00 00 00 04",specialites:""},
+  ],
+  rendezvous:[
+    {id:1,clientId:1,employeId:3,serviceId:1,date:"2025-01-15",heure:"10:00",statut:"confirmé",notes:"1ère visite"},
+    {id:2,clientId:2,employeId:2,serviceId:2,date:"2025-01-18",heure:"14:30",statut:"confirmé",notes:""},
+    {id:3,clientId:1,employeId:3,serviceId:5,date:"2025-01-20",heure:"09:00",statut:"pending",notes:"Mariage samedi"},
+    {id:4,clientId:3,employeId:2,serviceId:4,date:"2025-01-22",heure:"11:00",statut:"annulé",notes:""},
+  ],
+};
+
+// ═══════════════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════════════
+let DB=JSON.parse(localStorage.getItem('beauty_db')||JSON.stringify(SEED));
+let ME=JSON.parse(localStorage.getItem('beauty_user')||'null');
+let currentPage='dashboard';
+let clientFilter='all',factFilter='all',factTypeFilter='tout';
+let svcCatFilter='Tout',prodCatFilter='Tout';
+let calYear=new Date().getFullYear(),calMonth=new Date().getMonth(),calSelDay=null;
+let rdvViewMode='calendar';
+let deferredPrompt=null;
+let editingId=null,editingType=null;
+
+function saveDB(){ localStorage.setItem('beauty_db',JSON.stringify(DB)); }
+
+// ═══════════════════════════════════════════════════════════════
+// UTILS
+// ═══════════════════════════════════════════════════════════════
+function badge(label,color){ return `<span class="badge" style="background:${color}22;color:${color};border:1px solid ${color}44">${label}</span>`; }
+function avatar(name,color,size=40){
+  const initials=name.split(' ').map(n=>n[0]).join('').slice(0,2);
+  return `<div class="avatar" style="width:${size}px;height:${size}px;background:${color}22;border:2px solid ${color};color:${color}">${initials}</div>`;
+}
+function canEdit(){ return ME&&ME.role!=='viewer'; }
+function hasPerm(page){ return ME&&(ROLE_PERMS[ME.role]||[]).includes(page); }
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function getRef(f){ return f.type==='service'?DB.services.find(s=>s.id===f.refId):DB.produits.find(p=>p.id===f.refId); }
+function uid(){ return Date.now()+Math.floor(Math.random()*1000); }
+
+// ═══════════════════════════════════════════════════════════════
+// AUTH
+// ═══════════════════════════════════════════════════════════════
+function doLogin(){
+  const email=document.getElementById('l-email').value.trim();
+  const pwd=document.getElementById('l-pwd').value;
+  const u=USERS.find(u=>u.email===email&&u.password===pwd);
+  const err=document.getElementById('l-err');
+  if(!u){ err.style.display='block'; err.textContent='Email ou mot de passe incorrect'; return; }
+  ME=u; localStorage.setItem('beauty_user',JSON.stringify(u));
+  document.getElementById('login-screen').style.display='none';
+  document.getElementById('app').style.display='flex';
+  initApp();
+}
+document.getElementById('l-pwd').addEventListener('keydown',e=>{ if(e.key==='Enter') doLogin(); });
+
+function doLogout(){
+  ME=null; localStorage.removeItem('beauty_user');
+  document.getElementById('app').style.display='none';
+  document.getElementById('login-screen').style.display='flex';
+}
+
+// ═══════════════════════════════════════════════════════════════
+// APP INIT
+// ═══════════════════════════════════════════════════════════════
+function initApp(){
+  buildNav(); updateTopbar(); navigate('dashboard');
+}
+
+function buildNav(){
+  const perms=ROLE_PERMS[ME.role]||[];
+  // Bottom nav
+  const bn=document.getElementById('bottom-nav');
+  bn.innerHTML=perms.slice(0,7).map(id=>{
+    const n=NAV_ITEMS.find(x=>x.id===id);
+    return `<button class="bnav-item" id="bn-${id}" onclick="navigate('${id}')"><span class="icon">${n.icon}</span><span>${n.label}</span></button>`;
+  }).join('');
+  // Sidebar nav
+  const dn=document.getElementById('desk-nav');
+  dn.innerHTML=perms.map(id=>{
+    const n=NAV_ITEMS.find(x=>x.id===id);
+    return `<button class="snav-btn" id="sn-${id}" onclick="navigate('${id}')">${n.icon} ${n.label}</button>`;
+  }).join('');
+  // Show add buttons for editors+
+  if(canEdit()){
+    ['btn-add-client','btn-add-svc','btn-add-prod','btn-add-fact','btn-add-emp','btn-add-rdv'].forEach(id=>{
+      const el=document.getElementById(id);
+      if(el) el.style.display='inline-block';
+    });
+  }
+  // Sidebar user
+  document.getElementById('desk-user').innerHTML=`
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+      ${avatar(ME.nom,ROLE_COLOR[ME.role],34)}
+      <div><div style="font-size:13px;font-weight:500;color:var(--text)">${ME.nom.split(' ')[0]}</div><div style="font-size:11px;color:var(--muted)">${ME.poste}</div></div>
+    </div>
+    <button class="logout-btn" style="width:100%;text-align:center" onclick="doLogout()">Déconnexion</button>`;
+}
+
+function updateTopbar(){
+  document.getElementById('tb-av').textContent=ME.avatar;
+  document.getElementById('tb-av').style.borderColor=ROLE_COLOR[ME.role];
+  document.getElementById('tb-av').style.color=ROLE_COLOR[ME.role];
+  document.getElementById('tb-name').textContent=ME.nom;
+  document.getElementById('tb-role').textContent=ME.role;
+}
+
+function navigate(page){
+  if(!hasPerm(page)) page='dashboard';
+  currentPage=page;
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('s-'+page).classList.add('active');
+  document.querySelectorAll('.bnav-item,.snav-btn').forEach(b=>{
+    b.classList.toggle('active', b.id===`bn-${page}`||b.id===`sn-${page}`);
+  });
+  // FAB visibility
+  const fab=document.getElementById('fab');
+  const addPages=['clients','services','produits','facturation','rendezvous'];
+  fab.style.display=(canEdit()&&addPages.includes(page))?'flex':'none';
+  renderPage(page);
+  document.getElementById('main').scrollTo(0,0);
+}
+
+function fabAction(){
+  const map={clients:'client',services:'service',produits:'produit',facturation:'facture',rendezvous:'rdv'};
+  if(map[currentPage]) openModal(map[currentPage]);
+}
+
+function renderPage(p){
+  const r={dashboard:renderDashboard,clients:renderClients,services:renderServices,produits:renderProduits,facturation:renderFactures,employes:renderEmployes,acces:renderAcces,rendezvous:renderRdv};
+  if(r[p]) r[p]();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// DASHBOARD
+// ═══════════════════════════════════════════════════════════════
+function renderDashboard(){
+  const ca=DB.factures.filter(f=>f.statut==='payée').reduce((s,f)=>s+f.montant,0);
+  const att=DB.factures.filter(f=>f.statut==='en attente').reduce((s,f)=>s+f.montant,0);
+  const stockAlerte=DB.produits.filter(p=>p.stock<=p.seuil);
+  document.getElementById('dash-stats').innerHTML=`
+    <div class="stat-card" style="border-left-color:var(--accent)"><div class="label">CA encaissé</div><div class="value">${ca.toLocaleString('fr-FR')}€</div><div class="sub">Factures payées</div></div>
+    <div class="stat-card" style="border-left-color:var(--yellow)"><div class="label">En attente</div><div class="value">${att.toLocaleString('fr-FR')}€</div><div class="sub">À encaisser</div></div>
+    <div class="stat-card" style="border-left-color:var(--accent2)"><div class="label">Clients</div><div class="value">${DB.clients.length}</div><div class="sub">${DB.clients.filter(c=>c.status==='actif').length} actifs</div></div>
+    <div class="stat-card" style="border-left-color:var(--green)"><div class="label">RDV actifs</div><div class="value">${DB.rendezvous.filter(r=>r.statut!=='annulé').length}</div><div class="sub">Confirmés & en attente</div></div>`;
+  document.getElementById('dash-alert').innerHTML=stockAlerte.length?`<div class="alert-banner"><div style="color:var(--red);font-weight:600;margin-bottom:6px">⚠ Stock faible (${stockAlerte.length} produit${stockAlerte.length>1?'s':''})</div>${stockAlerte.map(p=>`<div style="color:var(--muted);font-size:13px">${esc(p.nom)} — ${p.stock} restant${p.stock>1?'s':''} (seuil: ${p.seuil})</div>`).join('')}</div>`:'';
+  document.getElementById('dash-factures').innerHTML=DB.factures.slice(-4).reverse().map(f=>{
+    const c=DB.clients.find(x=>x.id===f.clientId);
+    return `<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--border)"><div><div style="color:var(--text);font-size:13px">${esc(f.id)}</div><div style="color:var(--muted);font-size:12px">${esc(c?.nom)}</div></div><div style="text-align:right"><div style="color:var(--text);font-weight:600">${f.montant.toFixed(2)}€</div>${badge(f.statut,STATUS_COLOR[f.statut]||'#94a3b8')}</div></div>`;
+  }).join('');
+  document.getElementById('dash-rdv').innerHTML=DB.rendezvous.filter(r=>r.statut!=='annulé').slice(0,4).map(r=>{
+    const c=DB.clients.find(x=>x.id===r.clientId);const e=DB.employes.find(x=>x.id===r.employeId);
+    return `<div style="display:flex;gap:10px;align-items:center;padding:9px 0;border-bottom:1px solid var(--border)"><div style="background:var(--surface);border-radius:8px;padding:6px 10px;text-align:center;min-width:50px"><div style="color:var(--accent);font-size:13px;font-weight:700">${r.heure}</div><div style="color:var(--muted);font-size:10px">${r.date.slice(5)}</div></div><div style="flex:1"><div style="color:var(--text);font-size:13px">${esc(c?.nom)}</div><div style="color:var(--muted);font-size:12px">avec ${esc(e?.nom)}</div></div>${badge(r.statut,STATUS_COLOR[r.statut]||'#94a3b8')}</div>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// CLIENTS
+// ═══════════════════════════════════════════════════════════════
+function filterStatus(btn,section,val){
+  if(section==='clients') clientFilter=val;
+  document.querySelectorAll(`#s-${section} .filter-btn[data-s]`).forEach(b=>b.classList.toggle('on',b.dataset.s===val));
+  renderClients();
+}
+function renderClients(){
+  const q=(document.getElementById('q-clients')?.value||'').toLowerCase();
+  let list=DB.clients.filter(c=>(clientFilter==='all'||c.status===clientFilter)&&[c.nom,c.email,c.ville].join(' ').toLowerCase().includes(q));
+  document.getElementById('clients-count').textContent=`${list.length} résultat${list.length!==1?'s':''}`;
+  document.getElementById('clients-list').innerHTML=list.length?list.map(c=>`
+    <div class="list-item">
+      ${avatar(c.nom,'#f9a8d4')}
+      <div style="flex:1;min-width:0">
+        <div style="color:var(--text);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(c.nom)}</div>
+        <div style="color:var(--muted);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(c.email)} · ${esc(c.ville)}</div>
+        ${c.notes?`<div style="color:var(--muted);font-size:11px;font-style:italic">📝 ${esc(c.notes)}</div>`:''}
+      </div>
+      ${badge(c.status,STATUS_COLOR[c.status]||'#94a3b8')}
+      ${canEdit()?`<div class="item-actions"><button class="ghost-btn" onclick="editItem('client',${c.id})">✏</button><button class="ghost-btn danger-btn" onclick="delItem('client',${c.id})">✕</button></div>`:''}
+    </div>`).join(''):`<div class="empty"><div class="ei">👤</div>Aucun client trouvé</div>`;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SERVICES
+// ═══════════════════════════════════════════════════════════════
+function renderSvcFilters(){
+  const el=document.getElementById('svc-cat-filters');
+  el.innerHTML=['Tout',...SVC_CATS].map(c=>`<button class="filter-btn${svcCatFilter===c?' on':''}" onclick="svcCat('${c}')">${c}</button>`).join('');
+}
+function svcCat(c){ svcCatFilter=c; renderServices(); }
+function renderServices(){
+  renderSvcFilters();
+  const q=(document.getElementById('q-services')?.value||'').toLowerCase();
+  let list=DB.services.filter(s=>(svcCatFilter==='Tout'||s.categorie===svcCatFilter)&&[s.nom,s.description].join(' ').toLowerCase().includes(q));
+  document.getElementById('svc-count').textContent=`${list.length} service${list.length!==1?'s':''}`;
+  document.getElementById('services-grid').innerHTML=list.length?list.map(s=>`
+    <div class="svc-card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">${CAT_ICON[s.categorie]||'◈'}&nbsp;${badge(s.categorie,'#d4a5ff')}</div>
+      <div style="color:var(--text);font-weight:600;font-size:15px">${esc(s.nom)}</div>
+      <div style="color:var(--muted);font-size:13px;flex:1">${esc(s.description)}</div>
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <span style="color:var(--accent);font-weight:700;font-size:18px;font-family:'Cormorant Garamond',serif">${s.prix}€</span>
+        <span style="color:var(--muted);font-size:12px">⏱ ${esc(s.duree)}</span>
+      </div>
+      ${canEdit()?`<div style="display:flex;gap:8px;margin-top:4px"><button class="ghost-btn" style="flex:1" onclick="editItem('service',${s.id})">Modifier</button><button class="ghost-btn danger-btn" onclick="delItem('service',${s.id})">✕</button></div>`:''}
+    </div>`).join(''):`<div class="empty" style="grid-column:1/-1"><div class="ei">💆</div>Aucun service</div>`;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// PRODUITS
+// ═══════════════════════════════════════════════════════════════
+function renderProdFilters(){
+  const el=document.getElementById('prod-cat-filters');
+  el.innerHTML=['Tout',...PROD_CATS].map(c=>`<button class="filter-btn${prodCatFilter===c?' on':''}" onclick="prodCat('${c}')">${c}</button>`).join('');
+}
+function prodCat(c){ prodCatFilter=c; renderProduits(); }
+function renderProduits(){
+  renderProdFilters();
+  const q=(document.getElementById('q-produits')?.value||'').toLowerCase();
+  let list=DB.produits.filter(p=>(prodCatFilter==='Tout'||p.categorie===prodCatFilter)&&[p.nom,p.marque].join(' ').toLowerCase().includes(q));
+  document.getElementById('prod-count').textContent=`${list.length} produit${list.length!==1?'s':''}`;
+  document.getElementById('produits-body').innerHTML=list.length?list.map(p=>{
+    const stockColor=p.stock===0?'var(--red)':p.stock<=p.seuil?'var(--yellow)':'var(--green)';
+    const stockBadge=p.stock===0?badge('rupture','#fca5a5'):p.stock<=p.seuil?badge('faible','#fcd34d'):'';
+    return `<tr>
+      <td><div style="color:var(--text);font-weight:500">${esc(p.nom)}</div><div style="color:var(--muted);font-size:11px">${esc(p.description)}</div></td>
+      <td style="color:var(--muted)">${esc(p.marque)}</td>
+      <td>${badge(p.categorie,'#86efac')}</td>
+      <td style="color:var(--text);font-weight:600">${p.prix.toFixed(2)}€</td>
+      <td><span style="color:${stockColor};font-weight:600">${p.stock}</span><span style="color:var(--muted);font-size:11px"> / ${p.seuil}</span> ${stockBadge}</td>
+      <td>${canEdit()?`<div style="display:flex;gap:6px"><button class="ghost-btn" onclick="editItem('produit',${p.id})">✏</button><button class="ghost-btn danger-btn" onclick="delItem('produit',${p.id})">✕</button></div>`:''}</td>
+    </tr>`;
+  }).join(''):`<tr><td colspan="6"><div class="empty"><div class="ei">🧴</div>Aucun produit</div></td></tr>`;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// FACTURATION
+// ═══════════════════════════════════════════════════════════════
+function filterFact(btn,val){ factFilter=val; document.querySelectorAll('#s-facturation .filter-btn[data-f]').forEach(b=>b.classList.toggle('on',b.dataset.f===val)); renderFactures(); }
+function filterFactType(btn,val){ factTypeFilter=val; document.querySelectorAll('#s-facturation .filter-btn[data-ft]').forEach(b=>b.classList.toggle('on',b.dataset.ft===val)); renderFactures(); }
+function renderFactures(){
+  const q=(document.getElementById('q-factures')?.value||'').toLowerCase();
+  let list=DB.factures.filter(f=>{
+    const c=DB.clients.find(x=>x.id===f.clientId);
+    return (factFilter==='all'||f.statut===factFilter)&&(factTypeFilter==='tout'||f.type===factTypeFilter)&&[f.id,c?.nom||''].join(' ').toLowerCase().includes(q);
+  });
+  const total=list.reduce((s,f)=>s+f.montant,0);
+  document.getElementById('fact-total').textContent=`Total affiché : ${total.toFixed(2)}€`;
+  document.getElementById('factures-body').innerHTML=list.length?list.map(f=>{
+    const c=DB.clients.find(x=>x.id===f.clientId);const ref=getRef(f);
+    return `<tr>
+      <td style="color:var(--accent);font-family:monospace;font-size:12px">${esc(f.id)}</td>
+      <td style="color:var(--text)">${esc(c?.nom)}</td>
+      <td style="color:var(--muted);font-size:12px">${esc(ref?.nom||'—')}</td>
+      <td>${badge(f.type,f.type==='service'?'#d4a5ff':'#86efac')}</td>
+      <td style="color:var(--text);font-weight:600">${f.montant.toFixed(2)}€</td>
+      <td>${badge(f.statut,STATUS_COLOR[f.statut]||'#94a3b8')}</td>
+      <td><div style="display:flex;gap:5px"><button class="ghost-btn" onclick="exportPDF('${f.id}')">PDF</button>${canEdit()?`<button class="ghost-btn" onclick="editItem('facture','${f.id}')">✏</button><button class="ghost-btn danger-btn" onclick="delItem('facture','${f.id}')">✕</button>`:''}</div></td>
+    </tr>`;
+  }).join(''):`<tr><td colspan="7"><div class="empty"><div class="ei">🧾</div>Aucune facture</div></td></tr>`;
+}
+function exportPDF(id){
+  const f=DB.factures.find(x=>x.id===id);if(!f) return;
+  const c=DB.clients.find(x=>x.id===f.clientId);const ref=getRef(f);
+  const pu=(f.montant/f.qte).toFixed(2);
+  const html=`<!DOCTYPE html><html><head><meta charset="utf-8"><title>${f.id}</title>
+  <style>body{font-family:Georgia,serif;padding:40px;color:#111;max-width:700px;margin:0 auto}h1{font-size:26px;letter-spacing:2px}.accent{color:#9333ea}.muted{color:#6b7280;font-size:13px}table{width:100%;border-collapse:collapse;margin:20px 0}th{text-align:left;padding:8px 12px;background:#f3f4f6;font-size:11px;letter-spacing:1px;text-transform:uppercase}td{padding:10px 12px;border-bottom:1px solid #e5e7eb}.total{font-size:22px;font-weight:700;color:#9333ea;text-align:right}.hr{border:none;border-top:1px solid #e5e7eb;margin:18px 0}</style></head>
+  <body><h1 class="accent">✦ Beauty Suite</h1><p class="muted">Institut de beauté</p><hr class="hr">
+  <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px"><div><h2 style="font-size:18px">${f.id}</h2><p class="muted">Date : ${f.date}</p><p class="muted">Statut : ${f.statut}</p></div><div style="text-align:right"><strong>${c?.nom||'—'}</strong><br><span class="muted">${c?.email||''}<br>${c?.tel||''}<br>${c?.ville||''}</span></div></div>
+  <table><thead><tr><th>Description</th><th>Type</th><th>Qté</th><th>P.U.</th><th>Total</th></tr></thead><tbody><tr><td>${ref?.nom||'—'}</td><td>${f.type}</td><td>${f.qte}</td><td>${pu}€</td><td>${f.montant.toFixed(2)}€</td></tr></tbody></table>
+  <p class="total">${f.montant.toFixed(2)} €</p>
+  <p class="muted" style="margin-top:40px;font-size:11px;text-align:center">Beauty Suite · Merci de votre confiance</p></body></html>`;
+  const w=window.open('','_blank');w.document.write(html);w.document.close();w.print();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// EMPLOYES
+// ═══════════════════════════════════════════════════════════════
+function renderEmployes(){
+  const q=(document.getElementById('q-employes')?.value||'').toLowerCase();
+  let list=DB.employes.filter(e=>[e.nom,e.poste,e.email].join(' ').toLowerCase().includes(q));
+  const isAdmin=ME.role==='admin';
+  document.getElementById('emp-count').textContent=`${DB.employes.length} membres`;
+  document.getElementById('btn-add-emp').style.display=isAdmin?'inline-block':'none';
+  document.getElementById('employes-list').innerHTML=list.length?list.map(e=>`
+    <div class="list-item">
+      ${avatar(e.nom,ROLE_COLOR[e.role])}
+      <div style="flex:1;min-width:0">
+        <div style="color:var(--text);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(e.nom)}</div>
+        <div style="color:var(--muted);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(e.poste)} · ${esc(e.email)}</div>
+        ${e.specialites?`<div style="color:var(--muted);font-size:11px">✦ ${esc(e.specialites)}</div>`:''}
+      </div>
+      ${badge(e.role,ROLE_COLOR[e.role])} ${badge(e.status,STATUS_COLOR[e.status]||'#94a3b8')}
+      ${isAdmin?`<div class="item-actions"><button class="ghost-btn" onclick="editItem('employe',${e.id})">✏</button><button class="ghost-btn danger-btn" onclick="delItem('employe',${e.id})">✕</button></div>`:''}
+    </div>`).join(''):`<div class="empty"><div class="ei">👥</div>Aucun employé</div>`;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// ACCÈS
+// ═══════════════════════════════════════════════════════════════
+function renderAcces(){
+  const roles=[{role:'admin',label:'Admin',color:'#d4a5ff'},{role:'editor',label:'Éditeur',color:'#86efac'},{role:'viewer',label:'Lecture',color:'#93c5fd'}];
+  const mods=['dashboard','clients','services','produits','facturation','employes','acces','rendezvous'];
+  const labels={dashboard:'Tableau de bord',clients:'Clients',services:'Services',produits:'Produits',facturation:'Facturation',employes:'Employés',acces:'Accès',rendezvous:'Rendez-vous'};
+  document.getElementById('acces-head').innerHTML=`<tr><th>Module</th>${roles.map(r=>`<th style="color:${r.color}">${r.label}</th>`).join('')}</tr>`;
+  document.getElementById('acces-body').innerHTML=mods.map(m=>`<tr><td style="color:var(--text)">${labels[m]}</td>${roles.map(r=>`<td style="text-align:center">${ROLE_PERMS[r.role].includes(m)?`<span style="color:var(--green);font-size:16px">✓</span>`:`<span style="color:var(--border)">—</span>`}</td>`).join('')}</tr>`).join('');
+  document.getElementById('acces-roles').innerHTML=`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px">${roles.map(r=>{const members=DB.employes.filter(e=>e.role===r.role);return`<div class="card" style="padding:16px;border-color:${r.color}44"><div style="margin-bottom:10px">${badge(r.label,r.color)}</div>${members.length?members.map(m=>`<div style="color:var(--muted);font-size:13px;padding:4px 0;border-bottom:1px solid var(--border)">${esc(m.nom)}</div>`).join(''):`<div style="color:var(--border);font-size:13px">Aucun membre</div>`}</div>`;}).join('')}</div>`;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// RENDEZ-VOUS + CALENDAR
+// ═══════════════════════════════════════════════════════════════
+function toggleRdvView(){
+  rdvViewMode=rdvViewMode==='calendar'?'list':'calendar';
+  document.getElementById('rdv-calendar-view').style.display=rdvViewMode==='calendar'?'block':'none';
+  document.getElementById('rdv-list-view').style.display=rdvViewMode==='list'?'block':'none';
+  renderRdv();
+}
+function calNav(dir){
+  calMonth+=dir;
+  if(calMonth<0){calMonth=11;calYear--;}
+  if(calMonth>11){calMonth=0;calYear++;}
+  calSelDay=null;
+  renderCalendar();
+}
+function renderRdv(){
+  document.getElementById('rdv-count').textContent=`${DB.rendezvous.length} total`;
+  if(rdvViewMode==='calendar') renderCalendar();
+  else renderRdvList();
+}
+function renderCalendar(){
+  document.getElementById('cal-title').textContent=`${MONTHS[calMonth]} ${calYear}`;
+  document.getElementById('cal-daynames').innerHTML=DAYS_SHORT.map(d=>`<div class="cal-day-name">${d}</div>`).join('');
+  const today=new Date();
+  const firstDay=(new Date(calYear,calMonth,1).getDay()+6)%7;
+  const daysInMonth=new Date(calYear,calMonth+1,0).getDate();
+  const rdvByDate={};
+  DB.rendezvous.forEach(r=>{ if(!rdvByDate[r.date]) rdvByDate[r.date]=[]; rdvByDate[r.date].push(r); });
+  let cells='';
+  for(let i=0;i<firstDay;i++) cells+='<div></div>';
+  for(let d=1;d<=daysInMonth;d++){
+    const ds=`${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const rdvs=rdvByDate[ds]||[];
+    const isToday=d===today.getDate()&&calMonth===today.getMonth()&&calYear===today.getFullYear();
+    const isSel=d===calSelDay;
+    const cls=['cal-cell',isToday?'today':'',isSel?'selected':''].filter(Boolean).join(' ');
+    const dots=rdvs.slice(0,3).map(r=>`<div class="cal-dot" style="background:${STATUS_COLOR[r.statut]||'#94a3b8'}"></div>`).join('');
+    cells+=`<div class="${cls}" onclick="calSelectDay(${d},'${ds}')"><span class="d">${d}</span>${dots}</div>`;
+  }
+  document.getElementById('cal-cells').innerHTML=cells;
+  renderRdvPanel();
+}
+function calSelectDay(d,ds){
+  calSelDay=calSelDay===d?null:d;
+  renderCalendar();
+}
+function renderRdvPanel(){
+  const panel=document.getElementById('rdv-panel');
+  const prefix=`${calYear}-${String(calMonth+1).padStart(2,'0')}`;
+  let list=DB.rendezvous.filter(r=>r.date.startsWith(prefix));
+  if(calSelDay) list=list.filter(r=>r.date===`${prefix}-${String(calSelDay).padStart(2,'0')}`);
+  list.sort((a,b)=>a.date.localeCompare(b.date)||a.heure.localeCompare(b.heure));
+  panel.innerHTML=`<div style="color:var(--muted);font-size:10px;letter-spacing:.08em;text-transform:uppercase;margin-bottom:12px">${calSelDay?`${calSelDay} ${MONTHS[calMonth]}`:`Tout ${MONTHS[calMonth]}`}</div>`;
+  if(!list.length){ panel.innerHTML+=`<div class="empty"><div class="ei">📅</div>Aucun RDV ce jour</div>`; return; }
+  panel.innerHTML+=list.map(r=>{
+    const c=DB.clients.find(x=>x.id===r.clientId);const e=DB.employes.find(x=>x.id===r.employeId);const s=DB.services.find(x=>x.id===r.serviceId);
+    return `<div class="rdv-mini">
+      <div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="color:var(--accent);font-weight:700;font-size:13px">${r.heure}</span>${badge(r.statut,STATUS_COLOR[r.statut]||'#94a3b8')}</div>
+      <div style="color:var(--text);font-size:13px;font-weight:500">${esc(c?.nom)}</div>
+      <div style="color:var(--muted);font-size:12px">${esc(s?.nom)} · ${esc(e?.nom)}</div>
+      ${r.notes?`<div style="color:var(--muted);font-size:11px;font-style:italic;margin-top:4px">${esc(r.notes)}</div>`:''}
+      ${canEdit()?`<div style="display:flex;gap:6px;margin-top:8px"><button class="ghost-btn" style="font-size:11px;padding:4px 10px" onclick="editItem('rdv',${r.id})">Modifier</button><button class="ghost-btn danger-btn" style="font-size:11px;padding:4px 10px" onclick="delItem('rdv',${r.id})">Suppr.</button></div>`:''}
+    </div>`;
+  }).join('');
+}
+function renderRdvList(){
+  const q=(document.getElementById('q-rdv')?.value||'').toLowerCase();
+  let list=DB.rendezvous.filter(r=>{ const c=DB.clients.find(x=>x.id===r.clientId); return (c?.nom||'').toLowerCase().includes(q); });
+  list.sort((a,b)=>a.date.localeCompare(b.date)||a.heure.localeCompare(b.heure));
+  document.getElementById('rdv-list').innerHTML=list.length?list.map(r=>{
+    const c=DB.clients.find(x=>x.id===r.clientId);const e=DB.employes.find(x=>x.id===r.employeId);const s=DB.services.find(x=>x.id===r.serviceId);
+    return `<div class="list-item" style="flex-wrap:wrap;gap:12px">
+      <div style="background:var(--surface);border-radius:10px;padding:10px 14px;text-align:center;min-width:58px">
+        <div style="color:var(--accent2);font-size:15px;font-weight:700">${r.heure}</div>
+        <div style="color:var(--muted);font-size:10px">${r.date.slice(5)}</div>
+      </div>
+      <div style="flex:1;min-width:120px">
+        <div style="color:var(--text);font-weight:600">${esc(c?.nom)}</div>
+        <div style="color:var(--muted);font-size:12px">${esc(s?.nom)} · ${esc(e?.nom)}</div>
+        ${r.notes?`<div style="color:var(--muted);font-size:11px;font-style:italic">${esc(r.notes)}</div>`:''}
+      </div>
+      ${badge(r.statut,STATUS_COLOR[r.statut]||'#94a3b8')}
+      ${canEdit()?`<div class="item-actions"><button class="ghost-btn" onclick="editItem('rdv',${r.id})">✏</button><button class="ghost-btn danger-btn" onclick="delItem('rdv',${r.id})">✕</button></div>`:''}
+    </div>`;
+  }).join(''):`<div class="empty"><div class="ei">📅</div>Aucun RDV trouvé</div>`;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// MODAL / FORMS
+// ═══════════════════════════════════════════════════════════════
+function openModal(type, item=null){
+  editingType=type; editingId=item?item.id:null;
+  document.getElementById('modal-overlay').classList.add('open');
+  const titles={client:'Client',service:'Service',produit:'Produit',facture:'Facture',employe:'Employé',rdv:'Rendez-vous'};
+  document.getElementById('modal-title').textContent=(item?'Modifier ':'Nouveau ')+titles[type];
+  document.getElementById('modal-body').innerHTML=buildForm(type,item);
+}
+function closeModal(){ document.getElementById('modal-overlay').classList.remove('open'); editingId=null; editingType=null; }
+
+function field(label,html){ return `<div class="field"><label>${label}</label>${html}</div>`; }
+function inp2(id,type='text',val='',ph='',extra=''){ return `<input id="f-${id}" type="${type}" value="${esc(val)}" placeholder="${ph}" ${extra}/>`; }
+function sel(id,opts,val){ return `<select id="f-${id}">${opts.map(([v,l])=>`<option value="${v}"${v==val?' selected':''}>${l}</option>`).join('')}</select>`; }
+
+function buildForm(type,item){
+  const e=item||{};
+  if(type==='client') return `
+    ${field('Nom',inp2('nom','text',e.nom,''))}
+    ${field('Email',inp2('email','email',e.email,''))}
+    ${field('Téléphone',inp2('tel','tel',e.tel,''))}
+    ${field('Ville',inp2('ville','text',e.ville,''))}
+    ${field('Notes',`<textarea id="f-notes">${esc(e.notes||'')}</textarea>`)}
+    ${field('Statut',sel('status',[['actif','Actif'],['inactif','Inactif']],e.status||'actif'))}
+    <button class="btn-primary" style="background:var(--accent2);color:#0c0a14" onclick="saveForm()">Enregistrer</button>`;
+
+  if(type==='service') return `
+    ${field('Nom du service',inp2('nom','text',e.nom,''))}
+    ${field('Catégorie',sel('categorie',SVC_CATS.map(c=>[c,c]),e.categorie||'Visage'))}
+    <div class="form-row">${field('Prix (€)',inp2('prix','number',e.prix||'',''))}${field('Durée',inp2('duree','text',e.duree,'ex: 60 min'))}</div>
+    ${field('Description',`<textarea id="f-description">${esc(e.description||'')}</textarea>`)}
+    <button class="btn-primary" style="background:var(--accent);color:#0c0a14" onclick="saveForm()">Enregistrer</button>`;
+
+  if(type==='produit') return `
+    ${field('Nom du produit',inp2('nom','text',e.nom,''))}
+    <div class="form-row">${field('Marque',inp2('marque','text',e.marque,''))}${field('Catégorie',sel('categorie',PROD_CATS.map(c=>[c,c]),e.categorie||'Soin'))}</div>
+    <div class="form-row">${field('Prix (€)',inp2('prix','number',e.prix||'',''))}${field('Stock',inp2('stock','number',e.stock||0,''))}</div>
+    ${field('Seuil d\'alerte',inp2('seuil','number',e.seuil||5,''))}
+    ${field('Description',`<textarea id="f-description">${esc(e.description||'')}</textarea>`)}
+    <button class="btn-primary" style="background:var(--green);color:#0c0a14" onclick="saveForm()">Enregistrer</button>`;
+
+  if(type==='facture'){
+    const typeVal=e.type||'service';
+    const svcOpts=DB.services.map(s=>[s.id,`${s.nom} — ${s.prix}€`]);
+    const prodOpts=DB.produits.map(p=>[p.id,`${p.nom} — ${p.prix}€`]);
+    return `
+      ${field('Client',sel('clientId',DB.clients.map(c=>[c.id,c.nom]),e.clientId||''))}
+      ${field('Type',`<select id="f-type" onchange="refreshRefSelect()" ><option value="service"${typeVal==='service'?' selected':''}>Service</option><option value="produit"${typeVal==='produit'?' selected':''}>Produit</option></select>`)}
+      <div id="f-ref-wrap">${field('Référence',sel('refId',typeVal==='service'?svcOpts:prodOpts,e.refId||''))}</div>
+      <div class="form-row">${field('Quantité',inp2('qte','number',e.qte||1,''))}${field('Date',inp2('date','date',e.date||new Date().toISOString().slice(0,10),''))}</div>
+      ${field('Statut',sel('statut',[['en attente','En attente'],['payée','Payée'],['retard','En retard'],['annulée','Annulée']],e.statut||'en attente'))}
+      <button class="btn-primary" style="background:var(--green);color:#0c0a14" onclick="saveForm()">Enregistrer</button>`;
+  }
+
+  if(type==='employe') return `
+    ${field('Nom complet',inp2('nom','text',e.nom,''))}
+    <div class="form-row">${field('Poste',inp2('poste','text',e.poste,''))}${field('Téléphone',inp2('tel','tel',e.tel,''))}</div>
+    ${field('Email',inp2('email','email',e.email,''))}
+    ${field('Spécialités',inp2('specialites','text',e.specialites,'ex: Visage, Massage'))}
+    <div class="form-row">${field('Rôle',sel('role',[['admin','Admin'],['editor','Éditeur'],['viewer','Lecture']],e.role||'viewer'))}${field('Statut',sel('status',[['actif','Actif'],['en congé','En congé'],['inactif','Inactif']],e.status||'actif'))}</div>
+    <button class="btn-primary" style="background:var(--yellow);color:#0c0a14" onclick="saveForm()">Enregistrer</button>`;
+
+  if(type==='rdv') return `
+    ${field('Client',sel('clientId',DB.clients.map(c=>[c.id,c.nom]),e.clientId||''))}
+    ${field('Employé',sel('employeId',DB.employes.map(x=>[x.id,x.nom]),e.employeId||''))}
+    ${field('Service',sel('serviceId',DB.services.map(s=>[s.id,s.nom]),e.serviceId||''))}
+    <div class="form-row">${field('Date',inp2('date','date',e.date||'',''))}${field('Heure',inp2('heure','time',e.heure||'09:00',''))}</div>
+    ${field('Statut',sel('statut',[['pending','En attente'],['confirmé','Confirmé'],['annulé','Annulé']],e.statut||'pending'))}
+    ${field('Notes',`<textarea id="f-notes" placeholder="Informations complémentaires…">${esc(e.notes||'')}</textarea>`)}
+    <button class="btn-primary" style="background:var(--accent2);color:#0c0a14" onclick="saveForm()">Enregistrer</button>`;
+  return '';
+}
+
+function refreshRefSelect(){
+  const t=document.getElementById('f-type')?.value;
+  const opts=t==='service'?DB.services.map(s=>[s.id,`${s.nom} — ${s.prix}€`]):DB.produits.map(p=>[p.id,`${p.nom} — ${p.prix}€`]);
+  document.getElementById('f-ref-wrap').innerHTML=`<div class="field"><label>Référence</label><select id="f-refId">${opts.map(([v,l])=>`<option value="${v}">${l}</option>`).join('')}</select></div>`;
+}
+
+function gv(id){ const el=document.getElementById('f-'+id); return el?el.value:null; }
+
+function saveForm(){
+  const type=editingType;
+  if(type==='client'){
+    const item={id:editingId||uid(),nom:gv('nom'),email:gv('email'),tel:gv('tel'),ville:gv('ville'),notes:gv('notes'),status:gv('status')};
+    if(!item.nom) return;
+    DB.clients=editingId?DB.clients.map(x=>x.id==editingId?item:x):[...DB.clients,item];
+  }
+  else if(type==='service'){
+    const item={id:editingId||uid(),nom:gv('nom'),categorie:gv('categorie'),prix:Number(gv('prix')),duree:gv('duree'),description:gv('description')};
+    if(!item.nom) return;
+    DB.services=editingId?DB.services.map(x=>x.id==editingId?item:x):[...DB.services,item];
+  }
+  else if(type==='produit'){
+    const item={id:editingId||uid(),nom:gv('nom'),marque:gv('marque'),categorie:gv('categorie'),prix:Number(gv('prix')),stock:Number(gv('stock')),seuil:Number(gv('seuil')),description:gv('description')};
+    if(!item.nom) return;
+    DB.produits=editingId?DB.produits.map(x=>x.id==editingId?item:x):[...DB.produits,item];
+  }
+  else if(type==='facture'){
+    const ftype=gv('type');const refId=Number(gv('refId'));const qte=Number(gv('qte'))||1;
+    const ref=ftype==='service'?DB.services.find(s=>s.id===refId):DB.produits.find(p=>p.id===refId);
+    const montant=(ref?.prix||0)*qte;
+    if(!gv('clientId')||!refId) return;
+    const num=editingId||`F-${new Date().getFullYear()}-${String(DB.factures.length+1).padStart(3,'0')}`;
+    const item={id:num,clientId:Number(gv('clientId')),type:ftype,refId,qte,montant,statut:gv('statut'),date:gv('date')};
+    DB.factures=editingId?DB.factures.map(x=>x.id==editingId?item:x):[...DB.factures,item];
+  }
+  else if(type==='employe'){
+    const item={id:editingId||uid(),nom:gv('nom'),poste:gv('poste'),email:gv('email'),tel:gv('tel'),specialites:gv('specialites'),role:gv('role'),status:gv('status')};
+    if(!item.nom) return;
+    DB.employes=editingId?DB.employes.map(x=>x.id==editingId?item:x):[...DB.employes,item];
+  }
+  else if(type==='rdv'){
+    if(!gv('clientId')||!gv('date')) return;
+    const item={id:editingId||uid(),clientId:Number(gv('clientId')),employeId:Number(gv('employeId')),serviceId:Number(gv('serviceId')),date:gv('date'),heure:gv('heure'),statut:gv('statut'),notes:gv('notes')};
+    DB.rendezvous=editingId?DB.rendezvous.map(x=>x.id==editingId?item:x):[...DB.rendezvous,item];
+  }
+  saveDB(); closeModal(); renderPage(currentPage);
+}
+
+function editItem(type,id){
+  const map={client:DB.clients,service:DB.services,produit:DB.produits,facture:DB.factures,employe:DB.employes,rdv:DB.rendezvous};
+  const item=map[type]?.find(x=>x.id==id);
+  if(item) openModal(type,item);
+}
+
+function delItem(type,id){
+  if(!confirm('Supprimer cet élément ?')) return;
+  const map={client:'clients',service:'services',produit:'produits',facture:'factures',employe:'employes',rdv:'rendezvous'};
+  const key=map[type];
+  if(key){ DB[key]=DB[key].filter(x=>x.id!=id); saveDB(); renderPage(currentPage); }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// PWA
+// ═══════════════════════════════════════════════════════════════
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('sw.js').catch(()=>{});
+}
+window.addEventListener('beforeinstallprompt',e=>{
+  e.preventDefault(); deferredPrompt=e;
+  document.getElementById('install-bar').classList.add('show');
+});
+function installPWA(){
+  if(deferredPrompt){ deferredPrompt.prompt(); deferredPrompt.userChoice.then(()=>{ deferredPrompt=null; document.getElementById('install-bar').classList.remove('show'); }); }
+}
+window.addEventListener('appinstalled',()=>{ document.getElementById('install-bar').classList.remove('show'); });
+
+// ═══════════════════════════════════════════════════════════════
+// BOOT
+// ═══════════════════════════════════════════════════════════════
+if(ME){
+  document.getElementById('login-screen').style.display='none';
+  document.getElementById('app').style.display='flex';
+  initApp();
+}
+</script>
+</body>
+</html>
